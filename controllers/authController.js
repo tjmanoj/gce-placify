@@ -19,7 +19,7 @@ const otpStore = {}; // Temporary store for OTP verification
 export const signUp = async (req, res) => {
     const { name, email, password } = req.body;
 
-    if (!email.endsWith("@gmail.com")) {
+    if (!email.endsWith("@gcetly.ac.in")) {
         return res.status(400).json({ message: "Only college emails are allowed!" });
     }
 

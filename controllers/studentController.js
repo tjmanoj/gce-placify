@@ -35,7 +35,7 @@ export const updateStudentProfile = async (req, res) => {
         if (!name || !email || !phone_number) {
             return res.status(400).json({ message: "Full Name, Email, and Phone Number are required!" });
         }
-        if (!email.endsWith("@gmail.com")) {
+        if (!email.endsWith("@gcetly.ac.in")) {
             return res.status(400).json({ message: "Only college emails are allowed!" });
         }
         // Update student details in the database
