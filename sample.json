@@ -1,0 +1,59 @@
+{
+    "organisation_title": "Arvasit Technolabs",
+    "organisation_logo_url": "https://media.licdn.com/dms/image/v2/C4E0BAQHaOsEoEMa4IA/company-logo_200_200/company-logo_200_200/0/1648462030888/arvasit_logo?e=1748476800&v=beta&t=pev3G3A1QON5rhciLx-sGWFbT1yTq72cdpTPi7tM--o",
+    "job_title": "Software Developer",
+    "job_id": "040b5524-9c11-487f-9c2a-c20213d1362f",
+    "locations": [
+        "Mumbai"
+    ],
+    "min_ctc": null,
+    "max_ctc": null,
+    "no_of_positions_available": null,
+    "interview_experience_form_link": null,
+    "skills_required": [
+        "HTML",
+        "CSS",
+        "JavaScript",
+        "SQL",
+        "Node JS",
+        "React JS",
+        "Java"
+    ],
+    "service_agreement_in_months": null,
+    "job_description": {
+        "content": [
+            "Bachelors degree in Computer Science, Information Technology, or a related field.",
+            "Basic understanding of programming languages (e.g. Python, JavaScript, etc.).",
+            "Familiarity with web technologies (HTML, CSS, JavaScript) is a plus."
+        ],
+        "content_type": "HTML"
+    },
+    "eligibility_criteria": {
+        "content": [
+            "Open to All Applicants\n(Company Shortlists According to Criteria)"
+        ],
+        "content_type": "HTML"
+    },
+    "organisation_description": null,
+    "disclaimer": null,
+    "max_service_agreement_in_months": null,
+    "job_state": "OPEN",
+    "job_type": "FULL_TIME",
+    "user_job_state": "NOT_APPLIED",
+    "tag": "You are Eligible",
+    "apply_by": "2025-03-05 23:59:59",
+    "link_to_apply": "aHR0cHM6Ly93d3cubmF1a3JpLmNvbS9qb2ItbGlzdGluZ3Mtc29mdHdhcmUtZGV2ZWxvcGVyLWFydmFzaXQtdGVjaG5vbGFicy1wcml2YXRlLWxpbWl0ZWQtbXVtYmFpLTAtdG8tMS15ZWFycy0yNTAyMjU5MTk3Nzg/c3JjPWNsdXN0ZXImc2lkPTE3NDA1Njg1ODAzMDUyMTE3XzQmeHA9MTcmcHg9MiZleHRlcm5hbD10cnVl",
+    "is_user_not_eligible_for_job": false,
+    "job_application_status": null,
+    "job_creation_datetime": "2025-02-26 17:20:13",
+    "can_check_eligibility": false,
+    "reason_for_ineligibility": null,
+    "current_datetime": "2025-03-02 14:40:41",
+    "application_status_timeline": null,
+    "job_source": "EXTERNAL",
+    "min_years_of_experience": null,
+    "max_years_of_experience": null,
+    "config": {
+        "days_to_exclude_users_with_org_jobs": null
+    }
+}
