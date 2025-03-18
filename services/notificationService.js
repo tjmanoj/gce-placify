@@ -33,7 +33,7 @@ export async function sendJobNotificationEmail(job) {
 
 // Setup Web Push Notifications
 webpush.setVapidDetails(
-    "mailto:manojtofficial@gmail.com",
+    "mailto:gceplacement@gcetly.ac.in",
     process.env.VAPID_PUBLIC_KEY,
     process.env.VAPID_PRIVATE_KEY
 );
