@@ -1,5 +1,6 @@
 import db from "../config/db.js";
-
+import xlsx from "xlsx";
+import pool from "../config/db.js";
 // Promote a student to admin
 export const promoteToAdmin = async (req, res) => {
     try {
@@ -64,5 +65,49 @@ export const demoteToStudent = async (req, res) => {
     } catch (error) {
         console.error("Error demoting user:", error.message);
         return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+export const uploadStudentData = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        // Parse the uploaded Excel file
+        const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+        const sheetName = workbook.SheetNames[0];
+        const sheetData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+        let updatedCount = 0;
+
+        // Loop through each student record in Excel
+        for (const row of sheetData) {
+            const { roll_number, department, graduation_year, cgpa, history_of_arrear, standing_arrear, skills } = row;
+
+            // Check if the student exists in the database
+            const checkStudent = await pool.query(
+                "SELECT * FROM users WHERE roll_number = $1",
+                [roll_number]
+            );
+
+            if (checkStudent.rows.length > 0) {
+                // Update student data
+                await pool.query(
+                    `UPDATE users 
+                     SET department = $1, graduation_year = $2, cgpa = $3, 
+                         history_of_arrear = $4, standing_arrear = $5, skills = $6 
+                     WHERE roll_number = $7`,
+                    [department, graduation_year, cgpa, history_of_arrear, standing_arrear, skills, roll_number]
+                );
+                updatedCount++;
+            }
+        }
+
+        return res.status(200).json({ message: `${updatedCount} students updated successfully.` });
+
+    } catch (error) {
+        console.error("Error uploading student data:", error);
+        res.status(500).json({ message: "Internal Server Error" });
     }
 };

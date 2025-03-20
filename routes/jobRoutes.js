@@ -1,5 +1,5 @@
 import express from "express";
-import { addJob, getJobById, getAllJobs, editJob, deleteJob,applyForJob, approveJobApplication, getPendingApprovals, getAppliedStudents, disApproveJobApplication, downloadAppliedStudents, approveAllApplications, checkApplicationStatus} from "../controllers/jobController.js";
+import { addJob, getJobById, getAllJobs, editJob, deleteJob,applyForJob, approveJobApplication, getPendingApprovals, getAppliedStudents, disApproveJobApplication, downloadAppliedStudents, approveAllApplications, checkApplicationStatus, checkEligibilityStatus, revokeApplication} from "../controllers/jobController.js";
 import authMiddleware,{isAdmin} from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -19,6 +19,8 @@ router.get("/download-applied/:jobId", authMiddleware, isAdmin, downloadAppliedS
 router.put("/:jobId/approve-all", authMiddleware, approveAllApplications);
 
 router.get("/:jobId/application-status", authMiddleware, checkApplicationStatus);
+router.get("/:jobId/check-eligibility", authMiddleware, checkEligibilityStatus);
+router.delete("/:job_id/revoke-application",authMiddleware,revokeApplication);
 
 
 export default router;

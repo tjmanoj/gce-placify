@@ -19,26 +19,42 @@ const otpStore = {}; // Temporary store for OTP verification
 export const signUp = async (req, res) => {
     const { name, email, password } = req.body;
 
+    // ✅ 1. Validate College Email
     if (!email.endsWith("@gcetly.ac.in")) {
         return res.status(400).json({ message: "Only college emails are allowed!" });
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000);
-    otpStore[email] = otp;
+    try {
+        // ✅ 2. Check if Email is Already Registered
+        const existingUser = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
 
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: "Your OTP for Signup",
-        text: `Your OTP is: ${otp}`,
-    };
-
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            return res.status(500).json({ message: "OTP sending failed!" });
+        if (existingUser.rows.length > 0) {
+            return res.status(400).json({ message: "Email already registered! Please login." });
         }
-        res.json({ message: "OTP sent to your email!" });
-    });
+
+        // ✅ 3. Generate OTP Only if Email is New
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        otpStore[email] = otp;
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: "Your OTP for Signup",
+            text: `Your OTP is: ${otp}`,
+        };
+
+        // ✅ 4. Send OTP
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                return res.status(500).json({ message: "OTP sending failed!" });
+            }
+            res.json({ message: "OTP sent to your email!" });
+        });
+
+    } catch (error) {
+        console.error("Error checking email existence:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
 };
 
 export const verifyOTP = async (req, res) => {

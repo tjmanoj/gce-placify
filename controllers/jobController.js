@@ -30,8 +30,13 @@ export const addJob = async (req, res) => {
         const jobData = setDefaultValues(req.body);
 
         const insertQuery = `
-            INSERT INTO jobs (organisation_title, organisation_logo_url, job_title, locations, min_ctc, max_ctc, no_of_positions_available, skills_required, job_description, eligibility_criteria, job_state, job_type, apply_by, job_active_status) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`;
+            INSERT INTO jobs (
+                organisation_title, organisation_logo_url, job_title, locations, min_ctc, max_ctc, no_of_positions_available, 
+                skills_required, job_description, eligibility_criteria, job_state, job_type, apply_by, job_active_status,
+                min_cgpa, max_history_of_arrear, max_standing_arrear, allowed_graduation_years, allowed_departments
+            ) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) 
+            RETURNING *`;
 
         const values = [
             jobData.organisation_title,
@@ -48,15 +53,21 @@ export const addJob = async (req, res) => {
             jobData.job_type,
             jobData.apply_by,
             jobData.job_active_status,
+            jobData.min_cgpa,
+            jobData.max_history_of_arrear,
+            jobData.max_standing_arrear,
+            jobData.allowed_graduation_years,
+            jobData.allowed_departments
         ];
 
         const newJob = await db.query(insertQuery, values);
         const savedJob = newJob.rows[0];
-        // ✅ Send Email Notification
+
+        // ✅ Send Email & Push Notifications
         await sendJobNotificationEmail(savedJob);
-        // ✅ Send Web Push Notification
         await sendJobPushNotification(savedJob);
-        res.status(201).json(newJob.rows[0]);
+
+        res.status(201).json(savedJob);
     } catch (error) {
         console.error("Error adding job:", error.message);
         res.status(500).json({ message: "Internal Server Error" });
@@ -123,12 +134,27 @@ export const editJob = async (req, res) => {
         }
 
         const { job_id } = req.params;
-        const jobData = setDefaultValues(req.body);
+        let jobData = req.body;
+
+        // ✅ Convert string values to arrays
+        jobData.allowed_graduation_years = Array.isArray(jobData.allowed_graduation_years)
+            ? jobData.allowed_graduation_years
+            : jobData.allowed_graduation_years?.split(",").map(year => parseInt(year.trim())) || [];
+
+        jobData.allowed_departments = Array.isArray(jobData.allowed_departments)
+            ? jobData.allowed_departments
+            : jobData.allowed_departments?.split(",").map(dept => dept.trim()) || [];
+
+        console.log("Final jobData to update:", jobData); // Debugging Output
 
         const updateQuery = `
             UPDATE jobs 
-            SET organisation_title=$1, organisation_logo_url=$2, job_title=$3, locations=$4, min_ctc=$5, max_ctc=$6, no_of_positions_available=$7, skills_required=$8, job_description=$9, eligibility_criteria=$10, job_state=$11, job_type=$12, apply_by=$13, job_active_status=$14
-            WHERE id=$15 RETURNING *`;
+            SET organisation_title=$1, organisation_logo_url=$2, job_title=$3, locations=$4, 
+                min_ctc=$5, max_ctc=$6, no_of_positions_available=$7, skills_required=$8, 
+                job_description=$9, eligibility_criteria=$10, job_state=$11, job_type=$12, 
+                apply_by=$13, job_active_status=$14, min_cgpa=$15, max_history_of_arrear=$16, 
+                max_standing_arrear=$17, allowed_graduation_years=$18, allowed_departments=$19
+            WHERE id=$20 RETURNING *`;
 
         const values = [
             jobData.organisation_title,
@@ -145,7 +171,12 @@ export const editJob = async (req, res) => {
             jobData.job_type,
             jobData.apply_by,
             jobData.job_active_status,
-            job_id,
+            jobData.min_cgpa || null,
+            jobData.max_history_of_arrear || 0,
+            jobData.max_standing_arrear || 0,
+            jobData.allowed_graduation_years,
+            jobData.allowed_departments,
+            job_id
         ];
 
         const updatedJob = await db.query(updateQuery, values);
@@ -159,6 +190,8 @@ export const editJob = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
+
+
 
 // ✅ Delete Job Post (Admin Only)
 export const deleteJob = async (req, res) => {
@@ -245,6 +278,39 @@ export const approveJobApplication = async (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
+export const revokeApplication = async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students can revoke applications!" });
+        }
+
+        const { job_id } = req.params;
+        const student_id = req.user.id;
+        console.log(job_id);
+        console.log(student_id);
+        // ✅ Check if the application exists
+        const check = await db.query(
+            "SELECT * FROM job_applications WHERE job_id = $1 AND student_id = $2",
+            [job_id, student_id]
+        );
+
+        if (check.rows.length === 0) {
+            return res.status(400).json({ message: "You have not applied for this job!" });
+        }
+
+        // ✅ Delete the application from the database
+        await db.query(
+            "DELETE FROM job_applications WHERE job_id = $1 AND student_id = $2",
+            [job_id, student_id]
+        );
+
+        res.status(200).json({ message: "Application revoked successfully." });
+    } catch (error) {
+        console.error("Error revoking application:", error.message);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
 // ✅ Disapprove Job Application (Admin)
 export const disApproveJobApplication = async (req, res) => {
     try {
@@ -466,6 +532,39 @@ export const checkApplicationStatus = async (req, res) => {
         res.status(200).json({ applied: hasApplied });
     } catch (error) {
         console.error("Error checking application status:", error.message);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+export const checkEligibilityStatus = async (req, res) => {
+    try {
+        if (req.user.role !== "student") {
+            return res.status(403).json({ message: "Only students can check eligibility status!" });
+        }
+
+        const { jobId } = req.params;
+        const studentId = req.user.id;
+
+        // ✅ Check if the student is eligible for this job
+        const checkQuery = await db.query(
+            `SELECT EXISTS (
+                SELECT 1 FROM users u
+                JOIN jobs j ON j.id = $2
+                WHERE u.id = $1
+                AND u.cgpa >= j.min_cgpa
+                AND u.history_of_arrear <= j.max_history_of_arrear
+                AND u.standing_arrear <= j.max_standing_arrear
+                AND u.graduation_year = ANY (j.allowed_graduation_years)
+                AND u.department = ANY (j.allowed_departments)
+            ) AS eligible;`,
+            [studentId, jobId]
+        );
+
+        const isEligible = checkQuery.rows[0].eligible;
+
+        res.status(200).json({ eligible: isEligible });
+    } catch (error) {
+        console.error("Error checking eligibility status:", error.message);
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
