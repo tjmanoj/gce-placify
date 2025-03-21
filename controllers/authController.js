@@ -74,6 +74,7 @@ export const verifyOTP = async (req, res) => {
         );
         res.json({ message: "User registered successfully!" });
     } catch (error) {
+        console.error("Error registering user:", error);
         res.status(500).json({ message: "Error registering user" });
     }
 };
