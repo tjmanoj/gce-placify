@@ -286,8 +286,6 @@ export const revokeApplication = async (req, res) => {
 
         const { job_id } = req.params;
         const student_id = req.user.id;
-        console.log(job_id);
-        console.log(student_id);
         // ✅ Check if the application exists
         const check = await db.query(
             "SELECT * FROM job_applications WHERE job_id = $1 AND student_id = $2",
